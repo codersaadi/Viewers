@@ -1143,6 +1143,10 @@ export default class HangingProtocolService extends PubSubService {
     stageIdx: number,
     options
   ): HangingProtocol.ViewportMatchDetails {
+    if (!this.protocol) {
+      return;
+    }
+
     if (this.protocol.id !== protocolId) {
       console.warn('setting protocol');
       this.protocol = this.getProtocolById(protocolId);
@@ -1150,7 +1154,7 @@ export default class HangingProtocolService extends PubSubService {
     }
     const protocol = this.protocol;
     const stage = protocol.stages[stageIdx] ?? protocol.stages[this.stageIndex];
-    const defaultViewport = stage.defaultViewport || protocol.defaultViewport;
+    const defaultViewport = stage?.defaultViewport || protocol.defaultViewport;
     if (!defaultViewport) {
       return;
     }

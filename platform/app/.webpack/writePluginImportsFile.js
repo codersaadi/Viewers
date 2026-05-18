@@ -74,6 +74,15 @@ function getRuntimeLoadModesExtensions(modules) {
     if (!packageName) {
       return;
     }
+    if (packageName === '@lumex/extension-meeting') {
+      dynamicLoad.push(
+        `  if( module==="${packageName}") {`,
+        '    const imported = await import("../../../extensions/lumex-meeting/src");',
+        '    return imported.default;',
+        '  }'
+      );
+      return;
+    }
     if (module.importPath) {
       dynamicLoad.push(
         `  if( module==="${packageName}") {`,

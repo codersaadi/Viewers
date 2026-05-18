@@ -26,6 +26,8 @@ import {
 
 import loadModules, { loadModule as peerImport } from './pluginImports';
 import { publicUrl } from './utils/publicUrl';
+import * as cornerstoneCore from '@cornerstonejs/core';
+import * as cornerstoneTools from '@cornerstonejs/tools';
 
 /**
  * @param {object|func} appConfigOrFunc - application configuration, or a function that returns application configuration
@@ -79,6 +81,20 @@ async function appInit(appConfigOrFunc, defaultExtensions, defaultModes) {
     WorkflowStepsService.REGISTRATION,
     [StudyPrefetcherService.REGISTRATION, appConfig.studyPrefetcher],
   ]);
+
+  if (typeof window !== 'undefined') {
+    window.__LUMEX_OHIF = {
+      appConfig,
+      commandsManager,
+      extensionManager,
+      servicesManager,
+      serviceProvidersManager,
+      hotkeysManager,
+      cornerstoneCore,
+      cornerstoneTools,
+    };
+    window.dispatchEvent(new CustomEvent('lumex-ohif-ready', { detail: window.__LUMEX_OHIF }));
+  }
 
   errorHandler.getHTTPErrorHandler = () => {
     if (typeof appConfig.httpErrorHandler === 'function') {

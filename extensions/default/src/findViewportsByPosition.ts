@@ -26,7 +26,7 @@ export const findOrCreateViewport = (
   if (byPositionViewport) {
     return { ...byPositionViewport };
   }
-  const { protocolId, stageIndex } = hangingProtocolService.getState();
+  const { protocolId = 'default', stageIndex = 0 } = hangingProtocolService.getState?.() ?? {};
 
   // Setup the initial in display correctly for initial view/select
   if (!options.inDisplay) {

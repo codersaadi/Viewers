@@ -490,9 +490,9 @@ const commandsModule = ({
      * Changes the viewport grid layout in terms of the MxN layout.
      */
     setViewportGridLayout: ({ numRows, numCols, isHangingProtocolLayout = false }) => {
-      const { protocol } = hangingProtocolService.getActiveProtocol();
-      const onLayoutChange = protocol.callbacks?.onLayoutChange;
-      if (commandsManager.run(onLayoutChange, { numRows, numCols }) === false) {
+      const { protocol } = hangingProtocolService.getActiveProtocol() ?? {};
+      const onLayoutChange = protocol?.callbacks?.onLayoutChange;
+      if (onLayoutChange && commandsManager.run(onLayoutChange, { numRows, numCols }) === false) {
         // Don't apply the layout if the run command returns false
         return;
       }

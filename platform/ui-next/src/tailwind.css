@@ -8,35 +8,36 @@
 
 @layer base {
   :root {
-    --highlight: 191 74% 63%;
-    --neutral: 213 22% 59%;
-    --neutral-light: 214 69% 81%;
-    --neutral-dark: 214 16% 21%;
-    --background: 236 62% 5%;
-    --foreground: 0 0% 98%;
-    --card: 234 64% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 219 90% 15%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 214 98% 60%;
+    /* Lumex / OHIF Dark Theme - graphite clinical palette */
+    --highlight: 173 70% 60%;       /* #6FE7D6 refined aqua */
+    --neutral: 162 7% 63%;          /* #9AA7A3 muted clinical grey */
+    --neutral-light: 156 9% 82%;
+    --neutral-dark: 215 18% 17%;    /* #242D36 soft graphite border */
+    --background: 216 30% 4%;       /* #070A0D ink black */
+    --foreground: 160 13% 92%;      /* #E7ECEA soft white */
+    --card: 215 24% 9%;             /* #11161D graphite surface */
+    --card-foreground: 210 21% 93%;
+    --popover: 215 23% 10%;         /* #151B22 popover */
+    --popover-foreground: 210 21% 93%;
+    --primary: 174 62% 47%;         /* #2EC4B6 surgical teal */
     --primary-foreground: 0 0% 98%;
-    --secondary: 214 66% 48%;
-    --secondary-foreground: 200 50% 84%;
-    --muted: 234 64% 10%;
-    --muted-foreground: 200 46% 65%;
-    --accent: 217 79% 24%;
-    --accent-foreground: 0 0% 98%;
+    --secondary: 213 22% 15%;       /* #1D252E graphite */
+    --secondary-foreground: 210 21% 93%;
+    --muted: 214 21% 12%;           /* #182029 muted surface */
+    --muted-foreground: 162 7% 63%;
+    --accent: 174 29% 14%;          /* restrained teal surface */
+    --accent-foreground: 173 70% 60%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 236 52% 30%;
-    --ring: 214 98% 60%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --radius: 0.5rem;
+    --border: 215 18% 17%;
+    --input: 213 23% 14%;
+    --ring: 173 70% 60%;
+    --chart-1: 174 71% 42%;         /* teal */
+    --chart-2: 171 72% 63%;         /* aqua */
+    --chart-3: 173 70% 60%;
+    --chart-4: 166 73% 55%;         /* mint */
+    --chart-5: 213 22% 15%;
+    --radius: 0.625rem;
     --success-bg: hsl(143, 85%, 96%);
     --success-border: hsl(145, 92%, 91%);
     --success-text: hsl(140, 100%, 27%);
@@ -55,30 +56,30 @@
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 234 64% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 214 98% 60%;
+    --background: 216 30% 4%;
+    --foreground: 160 13% 92%;
+    --card: 215 24% 9%;
+    --card-foreground: 210 21% 93%;
+    --popover: 215 23% 10%;
+    --popover-foreground: 210 21% 93%;
+    --primary: 174 62% 47%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --secondary: 213 22% 15%;
+    --secondary-foreground: 210 21% 93%;
+    --muted: 214 21% 12%;
+    --muted-foreground: 162 7% 63%;
+    --accent: 174 29% 14%;
+    --accent-foreground: 173 70% 60%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 236 52% 30%;
-    --ring: 214 98% 60%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --border: 215 18% 17%;
+    --input: 213 23% 14%;
+    --ring: 173 70% 60%;
+    --chart-1: 174 62% 47%;
+    --chart-2: 173 70% 60%;
+    --chart-3: 173 70% 60%;
+    --chart-4: 166 73% 55%;
+    --chart-5: 213 22% 15%;
   }
 }
 

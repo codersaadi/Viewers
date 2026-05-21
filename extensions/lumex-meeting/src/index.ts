@@ -127,6 +127,12 @@ const createBridge = (runtime: Runtime) => {
     'Probe',
     'DragProbe',
     'Bidirectional',
+    'ArrowAnnotate',
+    'EllipticalROI',
+    'CircleROI',
+    'RectangleROI',
+    'PlanarFreehandROI',
+    'SplineROI',
   ]);
 
   const isReadOnlySyncedMode = () => mode === 'synced';
@@ -393,22 +399,28 @@ const createBridge = (runtime: Runtime) => {
   const sanitizeMeasurement = (measurement: any) => {
     const data = measurement?.data ?? {};
     const metadata = measurement?.metadata ?? {};
-    const cachedStats = data?.cachedStats ?? measurement?.cachedStats ?? null;
+    const cachedStats = data?.cachedStats ?? measurement?.cachedStats ?? data ?? null;
+    const primaryDisplayText = Array.isArray(measurement?.displayText?.primary)
+      ? measurement.displayText.primary[0]
+      : null;
 
     return {
       uid: getMeasurementId(measurement) ?? null,
       toolName: measurement?.toolName ?? metadata?.toolName ?? null,
       label: measurement?.label ?? data?.label ?? null,
       description: measurement?.description ?? null,
+      text: measurement?.text ?? data?.text ?? measurement?.label ?? primaryDisplayText ?? null,
       unit: measurement?.unit ?? null,
       displayText: measurement?.displayText ?? null,
       length: typeof measurement?.length === 'number' ? measurement.length : null,
       area: typeof measurement?.area === 'number' ? measurement.area : null,
+      perimeter: typeof measurement?.perimeter === 'number' ? measurement.perimeter : null,
       mean: typeof measurement?.mean === 'number' ? measurement.mean : null,
       stdDev: typeof measurement?.stdDev === 'number' ? measurement.stdDev : null,
       shortestDiameter: typeof measurement?.shortestDiameter === 'number' ? measurement.shortestDiameter : null,
       longestDiameter: typeof measurement?.longestDiameter === 'number' ? measurement.longestDiameter : null,
       points: measurement?.points ?? null,
+      textBox: measurement?.textBox ?? data?.textBox ?? null,
       handles: data?.handles ?? null,
       cachedStats,
       referenceStudyUID: measurement?.referenceStudyUID ?? metadata?.StudyInstanceUID ?? null,
@@ -551,8 +563,10 @@ const createBridge = (runtime: Runtime) => {
         },
         data: {
           label: measurement.label ?? undefined,
+          text: measurement.text ?? undefined,
           handles,
           cachedStats: measurement.cachedStats ?? {},
+          textBox: measurement.textBox ?? undefined,
           frameNumber: measurement.frameNumber ?? undefined,
         },
       });

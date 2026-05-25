@@ -296,6 +296,10 @@ class StudyPrefetcherService extends PubSubService {
       return;
     }
 
+    if (!Array.isArray(activeViewport.displaySetInstanceUIDs)) {
+      return;
+    }
+
     const displaySetUpdated = this._setActiveDisplaySetsUIDs(activeViewport.displaySetInstanceUIDs);
 
     if (forceRestart || displaySetUpdated) {
@@ -303,7 +307,7 @@ class StudyPrefetcherService extends PubSubService {
     }
   }
 
-  private _setActiveDisplaySetsUIDs(newActiveDisplaySetInstanceUIDs: string[]): boolean {
+  private _setActiveDisplaySetsUIDs(newActiveDisplaySetInstanceUIDs: string[] = []): boolean {
     const sameDisplaySets =
       newActiveDisplaySetInstanceUIDs.length === this._activeDisplaySetsInstanceUIDs.length &&
       newActiveDisplaySetInstanceUIDs.every(uid =>

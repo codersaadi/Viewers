@@ -190,7 +190,7 @@ const createBridge = (runtime: Runtime) => {
     overlay.style.pointerEvents = 'auto';
     overlay.style.cursor = 'not-allowed';
     overlay.style.background = 'transparent';
-    overlay.title = 'Following expert view. Use Inspect locally to interact.';
+    overlay.title = 'Following expert view.';
     overlay.addEventListener('contextmenu', blockSyncedUserInput, true);
     overlay.addEventListener('dblclick', blockSyncedUserInput, true);
     overlay.addEventListener('mousedown', blockSyncedUserInput, true);

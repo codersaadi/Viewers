@@ -138,6 +138,18 @@ const createBridge = (runtime: Runtime) => {
     'AdvancedMagnify',
   ]);
 
+  const rawAnnotationOnlyTools = new Set([
+    'ArrowAnnotate',
+    'EllipticalROI',
+    'CircleROI',
+    'RectangleROI',
+    'PlanarFreehandROI',
+    'SplineROI',
+    'LivewireContour',
+    'CalibrationLine',
+    'AdvancedMagnify',
+  ]);
+
   const isReadOnlySyncedMode = () => mode === 'synced';
 
   const blockSyncedUserInput = (event: Event) => {
@@ -406,13 +418,33 @@ const createBridge = (runtime: Runtime) => {
       ?? payload;
   };
 
+  const normalizeSerializedValue = (value: any): any => {
+    if (!value || typeof value !== 'object') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(normalizeSerializedValue);
+    }
+
+    const keys = Object.keys(value);
+    const numericKeys = keys.filter(key => /^\d+$/.test(key));
+    if (numericKeys.length === keys.length && numericKeys.length > 0) {
+      return numericKeys
+        .sort((a, b) => Number(a) - Number(b))
+        .map(key => normalizeSerializedValue(value[key]));
+    }
+
+    return Object.fromEntries(keys.map(key => [key, normalizeSerializedValue(value[key])]));
+  };
+
   const cloneSerializable = (value: any) => {
     if (!value || typeof value !== 'object') {
       return value;
     }
 
     try {
-      return JSON.parse(JSON.stringify(value));
+      return normalizeSerializedValue(JSON.parse(JSON.stringify(value)));
     } catch {
       return null;
     }
@@ -494,6 +526,11 @@ const createBridge = (runtime: Runtime) => {
 
     const uid = getMeasurementId(measurement);
     if (!uid) {
+      return;
+    }
+
+    const toolName = measurement?.toolName ?? measurement?.metadata?.toolName;
+    if (rawAnnotationOnlyTools.has(toolName) && !measurement.annotationUID) {
       return;
     }
 

@@ -52,27 +52,27 @@ const LivewireContour = {
         SeriesInstanceUID
       );
     } else {
-      displaySet = displaySetService.getDisplaySetsForSeries(SeriesInstanceUID);
+      displaySet = displaySetService.getDisplaySetsForSeries(SeriesInstanceUID)[0];
     }
 
     return {
       uid: annotationUID,
       SOPInstanceUID,
       FrameOfReferenceUID,
-      points: data.contour.polyline,
-      textBox: data.handles.textBox,
+      points: data.contour?.polyline ?? [],
+      textBox: data.handles?.textBox,
       metadata,
       frameNumber,
       referenceSeriesUID: SeriesInstanceUID,
       referencedImageId,
       referenceStudyUID: StudyInstanceUID,
       toolName: metadata.toolName,
-      displaySetInstanceUID: displaySet.displaySetInstanceUID,
+      displaySetInstanceUID: displaySet?.displaySetInstanceUID,
       label: data.label,
       isLocked,
       isVisible,
       displayText: getDisplayText(annotation, displaySet, displaySetService),
-      data: data.cachedStats,
+      data: data.cachedStats ?? {},
       type: getValueTypeFromToolType(toolName),
       getReport: () => getColumnValueReport(annotation, customizationService),
     };
@@ -133,7 +133,7 @@ function getDisplayText(annotation, displaySet, displaySetService) {
     secondary: [],
   };
 
-  if (!data.cachedStats || !data.cachedStats[`imageId:${metadata.referencedImageId}`]) {
+  if (!displaySet?.instances || !data.cachedStats || !data.cachedStats[`imageId:${metadata.referencedImageId}`]) {
     return displayText;
   }
 

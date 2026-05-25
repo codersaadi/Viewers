@@ -67,18 +67,18 @@ const SplineROI = {
       uid: annotationUID,
       SOPInstanceUID,
       FrameOfReferenceUID,
-      points: data.contour.polyline,
-      textBox: data.handles.textBox,
+      points: data.contour?.polyline ?? [],
+      textBox: data.handles?.textBox,
       metadata,
       frameNumber,
       referenceSeriesUID: SeriesInstanceUID,
       referenceStudyUID: StudyInstanceUID,
       referencedImageId,
       toolName: metadata.toolName,
-      displaySetInstanceUID: displaySet.displaySetInstanceUID,
+      displaySetInstanceUID: displaySet?.displaySetInstanceUID,
       label: data.label,
       displayText: displayText,
-      data: data.cachedStats,
+      data: data.cachedStats ?? {},
       type: getValueTypeFromToolType(toolName),
       getReport: () => getColumnValueReport(annotation, customizationService),
       isLocked,
@@ -98,6 +98,10 @@ function getMappedAnnotations(annotation, displaySetService) {
   const { metadata, data } = annotation;
   const { cachedStats } = data;
   const { referencedImageId } = metadata;
+  if (!cachedStats) {
+    return [];
+  }
+
   const targets = Object.keys(cachedStats);
 
   if (!targets.length) {
@@ -196,6 +200,10 @@ function getDisplayText(mappedAnnotations, displaySet) {
   }
 
   // Area is the same for all series
+  if (!displaySet?.instances) {
+    return displayText;
+  }
+
   const { area, SOPInstanceUID, frameNumber, areaUnit } = mappedAnnotations[0];
 
   const instance = displaySet.instances.find(image => image.SOPInstanceUID === SOPInstanceUID);

@@ -64,18 +64,18 @@ const PlanarFreehandROI = {
       uid: annotationUID,
       SOPInstanceUID,
       FrameOfReferenceUID,
-      points: data.contour.polyline,
-      textBox: data.handles.textBox,
+      points: data.contour?.polyline ?? [],
+      textBox: data.handles?.textBox,
       metadata,
       frameNumber,
       referenceSeriesUID: SeriesInstanceUID,
       referenceStudyUID: StudyInstanceUID,
       referencedImageId,
       toolName: metadata.toolName,
-      displaySetInstanceUID: displaySet.displaySetInstanceUID,
+      displaySetInstanceUID: displaySet?.displaySetInstanceUID,
       label: data.label,
       displayText: displayText,
-      data: data.cachedStats,
+      data: data.cachedStats ?? {},
       type: getValueTypeFromToolType(toolName),
       getReport: () => getColumnValueReport(annotation, customizationService),
       isLocked,
@@ -198,6 +198,10 @@ function getDisplayText(mappedAnnotations, displaySet) {
   }
 
   // Area is the same for all series
+  if (!displaySet?.instances) {
+    return displayText;
+  }
+
   const { area, SOPInstanceUID, frameNumber, areaUnit } = mappedAnnotations[0];
 
   const instance = displaySet.instances.find(image => image.SOPInstanceUID === SOPInstanceUID);

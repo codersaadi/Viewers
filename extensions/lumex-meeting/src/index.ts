@@ -1,5 +1,5 @@
-import { Enums, EVENTS, utilities } from '@cornerstonejs/core';
-import { annotation } from '@cornerstonejs/tools';
+import { Enums, EVENTS, eventTarget, utilities } from '@cornerstonejs/core';
+import { annotation, Enums as ToolsEnums } from '@cornerstonejs/tools';
 
 const id = '@lumex/extension-meeting';
 
@@ -133,6 +133,9 @@ const createBridge = (runtime: Runtime) => {
     'RectangleROI',
     'PlanarFreehandROI',
     'SplineROI',
+    'LivewireContour',
+    'CalibrationLine',
+    'AdvancedMagnify',
   ]);
 
   const isReadOnlySyncedMode = () => mode === 'synced';
@@ -391,6 +394,52 @@ const createBridge = (runtime: Runtime) => {
     return typeof uid === 'string' ? uid : undefined;
   };
 
+  const getMeasurementFromEvent = (payload: any) => {
+    if (!payload) {
+      return undefined;
+    }
+
+    return payload.measurement
+      ?? payload.annotation
+      ?? payload.detail?.measurement
+      ?? payload.detail?.annotation
+      ?? payload;
+  };
+
+  const cloneSerializable = (value: any) => {
+    if (!value || typeof value !== 'object') {
+      return value;
+    }
+
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return null;
+    }
+  };
+
+  const isValidPoint = (point: any) => (
+    Array.isArray(point)
+    && point.length >= 2
+    && point.every((value: any) => typeof value === 'number' && Number.isFinite(value))
+  );
+
+  const hasRenderableGeometry = (measurement: any) => {
+    const data = measurement?.data ?? {};
+    const points = data?.handles?.points ?? measurement?.points ?? measurement?.handles?.points;
+    const contourPoints = data?.contour?.polyline;
+
+    if (Array.isArray(points) && points.length > 0) {
+      return points.every(isValidPoint);
+    }
+
+    if (Array.isArray(contourPoints) && contourPoints.length > 0) {
+      return contourPoints.every(isValidPoint);
+    }
+
+    return false;
+  };
+
   const isControlledMeasurement = (measurement: any) => {
     const toolName = measurement?.toolName ?? measurement?.metadata?.toolName;
     return typeof toolName === 'string' && controlledMeasurementTools.has(toolName);
@@ -403,10 +452,14 @@ const createBridge = (runtime: Runtime) => {
     const primaryDisplayText = Array.isArray(measurement?.displayText?.primary)
       ? measurement.displayText.primary[0]
       : null;
+    const fullAnnotation = measurement?.annotationUID ? cloneSerializable(measurement) : null;
 
     return {
       uid: getMeasurementId(measurement) ?? null,
       toolName: measurement?.toolName ?? metadata?.toolName ?? null,
+      metadata,
+      data,
+      annotation: fullAnnotation,
       label: measurement?.label ?? data?.label ?? null,
       description: measurement?.description ?? null,
       text: measurement?.text ?? data?.text ?? measurement?.label ?? primaryDisplayText ?? null,
@@ -433,7 +486,8 @@ const createBridge = (runtime: Runtime) => {
     };
   };
 
-  const emitMeasurementChanged = (action: 'created' | 'updated', measurement?: any) => {
+  const emitMeasurementChanged = (action: 'created' | 'updated', measurementEvent?: any) => {
+    const measurement = getMeasurementFromEvent(measurementEvent);
     if (mode !== 'presenter' || !measurement || !isControlledMeasurement(measurement)) {
       return;
     }
@@ -443,15 +497,20 @@ const createBridge = (runtime: Runtime) => {
       return;
     }
 
-    if (action === 'created') {
-      if (knownMeasurementIds.has(uid)) {
-        return;
-      }
+    if (!hasRenderableGeometry(measurement)) {
+      return;
+    }
+
+    let eventAction = action;
+    if (!knownMeasurementIds.has(uid)) {
       knownMeasurementIds.add(uid);
+      eventAction = 'created';
+    } else if (action === 'created') {
+      return;
     }
 
     post({
-      type: action === 'created' ? 'annotation_created' : 'annotation_updated',
+      type: eventAction === 'created' ? 'annotation_created' : 'annotation_updated',
       annotation: {
         kind: 'measurement',
         capturedAt: new Date().toISOString(),
@@ -460,14 +519,15 @@ const createBridge = (runtime: Runtime) => {
     });
   };
 
-  const emitMeasurementCreated = ({ measurement }: { measurement?: any }) => emitMeasurementChanged('created', measurement);
-  const emitMeasurementUpdated = ({ measurement }: { measurement?: any }) => emitMeasurementChanged('updated', measurement);
+  const emitMeasurementCreated = (event: any) => emitMeasurementChanged('created', event);
+  const emitMeasurementUpdated = (event: any) => emitMeasurementChanged('updated', event);
 
-  const emitMeasurementRemoved = ({ measurement }: { measurement?: any }) => {
+  const emitMeasurementRemoved = (event: any) => {
     if (mode !== 'presenter') {
       return;
     }
 
+    const measurement = getMeasurementFromEvent(event);
     const uid = typeof measurement === 'string' ? measurement : getMeasurementId(measurement);
     if (!uid) {
       return;
@@ -537,6 +597,27 @@ const createBridge = (runtime: Runtime) => {
         annotation.state.removeAnnotation?.(uid);
       }
 
+      if (measurement.annotation && typeof measurement.annotation === 'object') {
+        const fullAnnotation = cloneSerializable(measurement.annotation);
+        if (!fullAnnotation?.data || !fullAnnotation?.metadata) {
+          post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'annotation_payload_invalid' });
+          return;
+        }
+
+        fullAnnotation.annotationUID = uid;
+        fullAnnotation.metadata = {
+          ...fullAnnotation.metadata,
+          toolName,
+        };
+        fullAnnotation.highlighted = false;
+        fullAnnotation.isLocked = true;
+        fullAnnotation.invalidated = true;
+        annotation.state.addAnnotation(fullAnnotation);
+        services().cornerstoneViewportService?.getRenderingEngine?.()?.render?.();
+        post({ type: 'measurement_artifact_applied', action, annotationUID: uid });
+        return;
+      }
+
       const handles = measurement.handles && typeof measurement.handles === 'object'
         ? measurement.handles
         : measurement.points
@@ -553,6 +634,7 @@ const createBridge = (runtime: Runtime) => {
         isLocked: true,
         invalidated: true,
         metadata: {
+          ...(measurement.metadata && typeof measurement.metadata === 'object' ? measurement.metadata : {}),
           toolName,
           FrameOfReferenceUID: measurement.FrameOfReferenceUID ?? undefined,
           referencedImageId: measurement.referencedImageId ?? undefined,
@@ -562,6 +644,7 @@ const createBridge = (runtime: Runtime) => {
           displaySetInstanceUID: measurement.displaySetInstanceUID ?? undefined,
         },
         data: {
+          ...(measurement.data && typeof measurement.data === 'object' ? measurement.data : {}),
           label: measurement.label ?? undefined,
           text: measurement.text ?? undefined,
           handles,
@@ -1697,6 +1780,22 @@ const createBridge = (runtime: Runtime) => {
         const subscription = measurementService.subscribe(measurementService.EVENTS.MEASUREMENT_REMOVED, emitMeasurementRemoved);
         viewportEventDisposers.push(() => subscription.unsubscribe());
       }
+    }
+
+    const toolsEvents = ToolsEnums?.Events;
+    if (toolsEvents) {
+      const rawAnnotationListeners: Array<[string | undefined, EventListener]> = [
+        [toolsEvents.ANNOTATION_COMPLETED, emitMeasurementCreated as EventListener],
+        [toolsEvents.ANNOTATION_MODIFIED, emitMeasurementUpdated as EventListener],
+        [toolsEvents.ANNOTATION_REMOVED, emitMeasurementRemoved as EventListener],
+      ];
+
+      rawAnnotationListeners
+        .filter((entry): entry is [string, EventListener] => typeof entry[0] === 'string')
+        .forEach(([eventName, listener]) => {
+          eventTarget.addEventListener(eventName, listener);
+          viewportEventDisposers.push(() => eventTarget.removeEventListener(eventName, listener));
+        });
     }
   };
 

@@ -36,6 +36,10 @@ const LivewireContour = {
       return null;
     }
 
+    if (!hasClosedContour(data.contour?.polyline)) {
+      return null;
+    }
+
     const { toolName, referencedImageId, FrameOfReferenceUID } = metadata;
     const validToolType = SUPPORTED_TOOLS.includes(toolName);
     if (!validToolType) {
@@ -78,6 +82,10 @@ const LivewireContour = {
     };
   },
 };
+
+function hasClosedContour(polyline) {
+  return Array.isArray(polyline) && polyline.length >= 3;
+}
 
 /**
  * This function is used to convert the measurement data to a

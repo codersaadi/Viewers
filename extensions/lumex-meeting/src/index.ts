@@ -456,6 +456,15 @@ const createBridge = (runtime: Runtime) => {
     && point.every((value: any) => typeof value === 'number' && Number.isFinite(value))
   );
 
+  const hasClosedContour = (value: any) => Array.isArray(value) && value.length >= 3 && value.every(isValidPoint);
+
+  const getAnnotationContour = (value: any) => value?.data?.contour?.polyline;
+
+  const hasFullRenderableAnnotation = (measurement: any) => {
+    const annotationPayload = measurement?.annotation ?? measurement;
+    return !!annotationPayload?.annotationUID && hasClosedContour(getAnnotationContour(annotationPayload));
+  };
+
   const hasRenderableGeometry = (measurement: any) => {
     const data = measurement?.data ?? {};
     const points = data?.handles?.points ?? measurement?.points ?? measurement?.handles?.points;
@@ -465,8 +474,8 @@ const createBridge = (runtime: Runtime) => {
       return points.every(isValidPoint);
     }
 
-    if (Array.isArray(contourPoints) && contourPoints.length > 0) {
-      return contourPoints.every(isValidPoint);
+    if (Array.isArray(contourPoints)) {
+      return hasClosedContour(contourPoints);
     }
 
     return false;
@@ -530,7 +539,7 @@ const createBridge = (runtime: Runtime) => {
     }
 
     const toolName = measurement?.toolName ?? measurement?.metadata?.toolName;
-    if (rawAnnotationOnlyTools.has(toolName) && !measurement.annotationUID) {
+    if (rawAnnotationOnlyTools.has(toolName) && !hasFullRenderableAnnotation(measurement)) {
       return;
     }
 
@@ -630,8 +639,9 @@ const createBridge = (runtime: Runtime) => {
     }
 
     try {
-      if (annotation.state.getAnnotation?.(uid)) {
-        annotation.state.removeAnnotation?.(uid);
+      if (rawAnnotationOnlyTools.has(toolName) && !measurement.annotation) {
+        post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'raw_annotation_missing' });
+        return;
       }
 
       if (measurement.annotation && typeof measurement.annotation === 'object') {
@@ -639,6 +649,14 @@ const createBridge = (runtime: Runtime) => {
         if (!fullAnnotation?.data || !fullAnnotation?.metadata) {
           post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'annotation_payload_invalid' });
           return;
+        }
+        if (rawAnnotationOnlyTools.has(toolName) && !hasClosedContour(fullAnnotation.data?.contour?.polyline)) {
+          post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'contour_incomplete' });
+          return;
+        }
+
+        if (annotation.state.getAnnotation?.(uid)) {
+          annotation.state.removeAnnotation?.(uid);
         }
 
         fullAnnotation.annotationUID = uid;
@@ -663,6 +681,10 @@ const createBridge = (runtime: Runtime) => {
       if (!handles) {
         post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'handles_missing' });
         return;
+      }
+
+      if (annotation.state.getAnnotation?.(uid)) {
+        annotation.state.removeAnnotation?.(uid);
       }
 
       annotation.state.addAnnotation({

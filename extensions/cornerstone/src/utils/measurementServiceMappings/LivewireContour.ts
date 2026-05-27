@@ -84,7 +84,9 @@ const LivewireContour = {
 };
 
 function hasClosedContour(polyline) {
-  return Array.isArray(polyline) && polyline.length >= 3;
+  return Array.isArray(polyline)
+    && polyline.length >= 3
+    && polyline.every(point => Array.isArray(point) && point.length >= 2 && point.every(Number.isFinite));
 }
 
 /**

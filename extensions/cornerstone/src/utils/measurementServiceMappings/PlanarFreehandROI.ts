@@ -89,7 +89,9 @@ const PlanarFreehandROI = {
 };
 
 function hasClosedContour(polyline) {
-  return Array.isArray(polyline) && polyline.length >= 3;
+  return Array.isArray(polyline)
+    && polyline.length >= 3
+    && polyline.every(point => Array.isArray(point) && point.length >= 2 && point.every(Number.isFinite));
 }
 
 /**
@@ -124,7 +126,10 @@ function getMappedAnnotations(annotation, displaySetService) {
       annotation
     );
 
-    const displaySet = displaySetService.getDisplaySetsForSeries(SeriesInstanceUID)[0];
+    const displaySet = displaySetService.getDisplaySetsForSeries(SeriesInstanceUID)?.[0];
+    if (!displaySet) {
+      return;
+    }
 
     const { SeriesNumber } = displaySet;
     const { mean, stdDev, max, area, Modality, areaUnit, modalityUnit } = targetStats;

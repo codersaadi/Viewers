@@ -150,6 +150,12 @@ const createBridge = (runtime: Runtime) => {
     'AdvancedMagnify',
   ]);
 
+  const contourAnnotationTools = new Set([
+    'PlanarFreehandROI',
+    'SplineROI',
+    'LivewireContour',
+  ]);
+
   const isReadOnlySyncedMode = () => mode === 'synced';
 
   const blockSyncedUserInput = (event: Event) => {
@@ -460,9 +466,21 @@ const createBridge = (runtime: Runtime) => {
 
   const getAnnotationContour = (value: any) => value?.data?.contour?.polyline;
 
+  const getAnnotationPoints = (value: any) => value?.data?.handles?.points;
+
   const hasFullRenderableAnnotation = (measurement: any) => {
     const annotationPayload = measurement?.annotation ?? measurement;
-    return !!annotationPayload?.annotationUID && hasClosedContour(getAnnotationContour(annotationPayload));
+    const toolName = measurement?.toolName ?? measurement?.metadata?.toolName ?? annotationPayload?.metadata?.toolName;
+    if (!annotationPayload?.annotationUID || !annotationPayload?.data || !annotationPayload?.metadata) {
+      return false;
+    }
+
+    if (contourAnnotationTools.has(toolName)) {
+      return hasClosedContour(getAnnotationContour(annotationPayload));
+    }
+
+    const points = getAnnotationPoints(annotationPayload);
+    return Array.isArray(points) && points.length > 0 && points.every(isValidPoint);
   };
 
   const hasRenderableGeometry = (measurement: any) => {
@@ -650,7 +668,7 @@ const createBridge = (runtime: Runtime) => {
           post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'annotation_payload_invalid' });
           return;
         }
-        if (rawAnnotationOnlyTools.has(toolName) && !hasClosedContour(fullAnnotation.data?.contour?.polyline)) {
+        if (contourAnnotationTools.has(toolName) && !hasClosedContour(fullAnnotation.data?.contour?.polyline)) {
           post({ type: 'measurement_artifact_apply_failed', action, annotationUID: uid, reason: 'contour_incomplete' });
           return;
         }

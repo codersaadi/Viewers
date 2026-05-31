@@ -92,9 +92,11 @@ const SplineROI = {
 };
 
 function hasClosedContour(polyline) {
-  return Array.isArray(polyline)
-    && polyline.length >= 3
-    && polyline.every(point => Array.isArray(point) && point.length >= 2 && point.every(Number.isFinite));
+  if (!Array.isArray(polyline) || polyline.length < 3) return false;
+  if (!polyline.every(point => Array.isArray(point) && point.length >= 2 && point.every(Number.isFinite))) return false;
+  const first = polyline[0];
+  const last = polyline[polyline.length - 1];
+  return first[0] === last[0] && first[1] === last[1] && (first[2] ?? 0) === (last[2] ?? 0);
 }
 
 /**

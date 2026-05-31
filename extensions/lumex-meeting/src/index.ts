@@ -135,7 +135,6 @@ const createBridge = (runtime: Runtime) => {
     'SplineROI',
     'LivewireContour',
     'CalibrationLine',
-    'AdvancedMagnify',
   ]);
 
   const rawAnnotationOnlyTools = new Set([
@@ -147,7 +146,6 @@ const createBridge = (runtime: Runtime) => {
     'SplineROI',
     'LivewireContour',
     'CalibrationLine',
-    'AdvancedMagnify',
   ]);
 
   const contourAnnotationTools = new Set([
@@ -462,7 +460,12 @@ const createBridge = (runtime: Runtime) => {
     && point.every((value: any) => typeof value === 'number' && Number.isFinite(value))
   );
 
-  const hasClosedContour = (value: any) => Array.isArray(value) && value.length >= 3 && value.every(isValidPoint);
+  const hasClosedContour = (value: any) => {
+    if (!Array.isArray(value) || value.length < 3 || !value.every(isValidPoint)) return false;
+    const first = value[0];
+    const last = value[value.length - 1];
+    return first[0] === last[0] && first[1] === last[1] && (first[2] ?? 0) === (last[2] ?? 0);
+  };
 
   const getAnnotationContour = (value: any) => value?.data?.contour?.polyline;
 
@@ -559,6 +562,11 @@ const createBridge = (runtime: Runtime) => {
     const toolName = measurement?.toolName ?? measurement?.metadata?.toolName;
     if (rawAnnotationOnlyTools.has(toolName) && !hasFullRenderableAnnotation(measurement)) {
       return;
+    }
+
+    if (contourAnnotationTools.has(toolName)) {
+      const annotationPayload = measurement?.annotation ?? measurement;
+      if (annotationPayload?.data?.contour?.closed === false) return;
     }
 
     if (!hasRenderableGeometry(measurement)) {

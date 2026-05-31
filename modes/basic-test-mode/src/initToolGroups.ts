@@ -72,9 +72,9 @@ function initDefaultToolGroup(extensionManager, toolGroupService, commandsManage
       { toolName: toolNames.LivewireContour },
     ],
     // enabled
-    enabled: [{ toolName: toolNames.ImageOverlayViewer }],
+    enabled: [{ toolName: toolNames.ImageOverlayViewer }, { toolName: toolNames.AdvancedMagnify }],
     // disabled
-    disabled: [{ toolName: toolNames.ReferenceLines }, { toolName: toolNames.AdvancedMagnify }],
+    disabled: [{ toolName: toolNames.ReferenceLines }],
   };
 
   toolGroupService.createToolGroupAndAddTools(toolGroupId, tools);

@@ -172,7 +172,7 @@ function createTools({ utilityModule, commandsManager }) {
         },
       },
     ],
-    disabled: [{ toolName: toolNames.ReferenceLines }, { toolName: toolNames.AdvancedMagnify }],
+    disabled: [{ toolName: toolNames.ReferenceLines }],
   };
 
   const updatedTools = commandsManager.run('initializeSegmentLabelTool', { tools });

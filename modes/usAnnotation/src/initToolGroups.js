@@ -88,12 +88,9 @@ function initDefaultToolGroup(extensionManager, toolGroupService, commandsManage
     enabled: [
       { toolName: toolNames.ImageOverlayViewer },
       { toolName: toolNames.ReferenceLines },
+      { toolName: toolNames.AdvancedMagnify },
     ],
-    disabled: [
-      {
-        toolName: toolNames.AdvancedMagnify,
-      },
-    ],
+    disabled: [],
   };
 
   toolGroupService.createToolGroupAndAddTools(toolGroupId, tools);
